@@ -12,7 +12,7 @@ app:
   chat:
       url: ${app.base.url}index?username=%s
   websocket:
-      url: ws://localhost:9090/chat/
+      url: ws://localhost:${server.port}/chat/
 
 selenium:
     chromedriver: D:\Dev Tools\chromedriver_win32\chromedriver.exe

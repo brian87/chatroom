@@ -5,8 +5,9 @@ WebSocket and STOMP with Spring Boot MVC framework.
 ## Requirements
 * JDK 1.8
 * Update **application.yml** with appropriate:
-    * **chromedriver** path for testing
+    * **server port**
     * **base**, **chat** and **websocket** urls
+    * **chromedriver** path for testing
 
 ## Instructions
 ### How to Run
