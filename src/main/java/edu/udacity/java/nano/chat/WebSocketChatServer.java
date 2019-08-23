@@ -8,7 +8,6 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +28,7 @@ public class WebSocketChatServer {
 
     /**
      * All chat sessions.
-     * Multiple Sessions are associated with a single a user to account for the case where a user logs in to chat room on multiple tabs
+     * Multiple Sessions are associated with a single user to account for the case where a user logs in to a chat room on multiple tabs
      */
     private static Map<String, Set<Session>> onlineSessions = new ConcurrentHashMap<>();
 

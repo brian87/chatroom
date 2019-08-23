@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.List;
 
@@ -40,10 +41,14 @@ public class WebSocketChatServerTest {
 
     private WebDriver webDriver;
 
-    @Before
-    public void init() {
+    @PostConstruct
+    public void initUrls() {
         BASE_URL = environment.getProperty("app.base.url");
         CHAT_URL = environment.getProperty("app.chat.url");
+    }
+
+    @Before
+    public void init() {
         webDriver = initWebDriver();
     }
 
