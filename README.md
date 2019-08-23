@@ -1,21 +1,18 @@
 # Chat Room
-Complete the chat room application implementation using WebSocket.
+In Project 1 of the Udacity Java Developer Nanodegree Program, **Chat Room** app was developed using 
+WebSocket and STOMP with Spring Boot MVC framework.
 
-## Background
-WebSocket is a communication protocol that makes it possible to establish a two-way communication channel between a
-server and a client.
+## Requirements
+* JDK 1.8
+* Update **application.yml** with appropriate:
+    * **chromedriver** path for testing
+    * **base**, **chat** and **websocket** urls
 
-## Instruction
-### Implement the message model
-Message model is the message payload that will be exchanged between the client and the server. Implement the Message
-class in chat module. Make sure you cover all there basic actions.
-1. ENTER
-2. CHAT
-3. LEAVE
+## Instructions
+### How to Run
+* Package app: ```mvn package```
+* Run: ```java -jar target/chatroom-0.0.1-SNAPSHOT.jar```
 
-### Complete WebSocketChatServer
-Implement all TODOs inside WebSocketChatServer follow each method description.
-
-### Run the application with command
-mvn build; mvn spring-boot:run
+### How to Test
+Run: ```mvn clean test``` 
 
