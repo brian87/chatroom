@@ -7,6 +7,8 @@ import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,15 +29,18 @@ public class WebSocketChatServer {
 
     /**
      * All chat sessions.
+     * Multiple Sessions are associated with a single a user to account for the case where a user logs in to chat room on multiple tabs
      */
-    private static Map<String, Session> onlineSessions = new ConcurrentHashMap<>();
+    private static Map<String, Set<Session>> onlineSessions = new ConcurrentHashMap<>();
 
     private static void sendMessageToAll(Message message) {
-        Set<Map.Entry<String, Session>> sessionEntries = onlineSessions.entrySet();
-        for (Map.Entry<String, Session> entry : sessionEntries) {
+        Set<Map.Entry<String, Set<Session>>> sessionEntries = onlineSessions.entrySet();
+        for (Map.Entry<String, Set<Session>> entry : sessionEntries) {
             try {
-                Session session = entry.getValue();
-                session.getBasicRemote().sendText(JSON.toJSONString(message));
+                Set<Session> sessions = entry.getValue();
+                for (Session session : sessions) {
+                    session.getBasicRemote().sendText(JSON.toJSONString(message));
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -47,9 +52,18 @@ public class WebSocketChatServer {
      */
     @OnOpen
     public void onOpen(Session session,  @PathParam("username") String username) {
+        Set<Session> sessions = onlineSessions.getOrDefault(username, new HashSet<>());
         if (!onlineSessions.containsKey(username)) {
-            onlineSessions.put(username, session);
+            sessions.add(session);
+            onlineSessions.put(username, sessions);
             sendMessageToAll(new Message(username, " joined the chat room.", onlineSessions.size(), ENTER));
+        } else {
+            boolean isPresent = sessions.stream().anyMatch((s) -> s.getId().equals(session.getId()));
+            if (!isPresent) {
+                sessions.add(session);
+                onlineSessions.put(username, sessions);
+            }
+            updateOnlineUsersCount(session);
         }
     }
 
@@ -70,9 +84,11 @@ public class WebSocketChatServer {
     @OnClose
     public void onClose(Session session, @PathParam("username") String username) throws IOException {
         if (onlineSessions.containsKey(username)) {
-            onlineSessions.remove(username);
+            boolean wasLastSession = removeOnlineSession(session, username);
             session.close();
-            sendMessageToAll(new Message(username, " left the chat room.", onlineSessions.size(), LEAVE));
+            if (wasLastSession) {
+                sendMessageToAll(new Message(username, " left the chat room.", onlineSessions.size(), LEAVE));
+            }
         }
     }
 
@@ -82,6 +98,27 @@ public class WebSocketChatServer {
     @OnError
     public void onError(Session session, Throwable error) {
         error.printStackTrace();
+    }
+
+    private boolean removeOnlineSession(Session session, @PathParam("username") String username) {
+        Set<Session> sessions = onlineSessions.get(username);
+        sessions.remove(session);
+        if (sessions.isEmpty()) {
+            onlineSessions.remove(username);
+            return true;
+        }
+
+        onlineSessions.put(username, sessions);
+        return false;
+    }
+
+    private void updateOnlineUsersCount(Session session) {
+        try {
+            Message dummyMessage = new Message("", "", onlineSessions.size(), ENTER);
+            session.getBasicRemote().sendText(JSON.toJSONString(dummyMessage));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

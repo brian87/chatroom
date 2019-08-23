@@ -15,7 +15,7 @@
         <span class="mdui-typo-title">Chat Room</span>
         <div class="mdui-toolbar-spacer"></div>
         <a class="mdui-btn mdui-btn-icon" th:href="@{/}">
-            <i class="mdui-icon material-icons">exit_to_app</i>
+            <i id="exit" class="mdui-icon material-icons">exit_to_app</i>
         </a>
     </div>
 </div>
@@ -23,27 +23,27 @@
 <div style="margin-left:20px;margin-right:20px">
     <div class="container_text">
         <div class="mdui-row">
-            <div class="mdui-col-xs-12 mdui-col-sm-6">
-                <div class="mdui-col-xs-12 mdui-col-sm-10">
-                    <div class="mdui-textfield-floating-label" style="margin-top:15px">
-                        <i class="mdui-icon">Welcome：</i>
-                        <i class="mdui-icon" id="username" th:text="${username}"></i>
+                <div class="mdui-col-xs-12 mdui-col-sm-6">
+                    <div class="mdui-col-xs-12 mdui-col-sm-10">
+                        <div class="mdui-textfield-floating-label" style="margin-top:15px">
+                            <i class="mdui-icon">Welcome：</i>
+                            <i class="mdui-icon" id="username" th:text="${username}"></i>
+                        </div>
                     </div>
-                </div>
-                <div class="mdui-col-xs-12 mdui-col-sm-10">
-                    <div class="mdui-textfield mdui-textfield-floating-label">
-                        <i class="mdui-icon material-icons">textsms</i>
-                        <label class="mdui-textfield-label">Send Text</label>
-                        <input class="mdui-textfield-input" id="msg"/>
+                    <div class="mdui-col-xs-12 mdui-col-sm-10">
+                        <div class="mdui-textfield mdui-textfield-floating-label">
+                            <i class="mdui-icon material-icons">textsms</i>
+                            <label class="mdui-textfield-label">Send Text</label>
+                            <input class="mdui-textfield-input" id="msg"/>
+                        </div>
+                        <div class="mdui-container" style="padding:20px 35px">
+                            <button id="send" class="mdui-btn mdui-color-pink-accent mdui-ripple"
+                                    onclick="sendMsgToServer()"> Send (Enter) </button>
+                            <button class="mdui-btn mdui-color-theme mdui-ripple"
+                                    onclick="clearMsg()">Clear
+                            </button>
+                        </div>
                     </div>
-                    <div class="mdui-container" style="padding:20px 35px">
-                        <button id="send" class="mdui-btn mdui-color-pink-accent mdui-ripple"
-                                onclick="sendMsgToServer()"> Send (Enter) </button>
-                        <button class="mdui-btn mdui-color-theme mdui-ripple"
-                                onclick="clearMsg()">Clear
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <div class="mdui-col-xs-12 mdui-col-sm-5" style="padding:10px 0">
@@ -57,7 +57,7 @@
                     <span class="mdui-chip-icon mdui-color-blue">
                         <i class="mdui-icon material-icons">face</i></span>
                     <span class="mdui-chip-title">Online Users</span>
-                    <span class="mdui-chip-title chat-num"></span>
+                    <span id="chat-num" class="mdui-chip-title chat-num"></span>
                 </div>
 
                 <div class="message-container" style="padding: 10px; margin-top: 10px">
@@ -82,7 +82,8 @@
          * WebSocket client PS：URL shows WebSocket protocal, port number, and then end point.
          */
         var username = /*[[${username}]]*/;
-        var webSocket = new WebSocket('ws://localhost:9090/chat/' + username);
+        var websocketUrl = /*[[${websocketUrl}]]*/;
+        var webSocket = new WebSocket(websocketUrl + username);
         /**
          * websocket open connection.
          */
@@ -98,13 +99,16 @@
             //Receive Message from Server
             var message = JSON.parse(event.data) || {};
             var $messageContainer = $('.message-container');
-            var messageContent = formatMessage(message, username);
 
-            $messageContainer.append(
-                '<div class="mdui-card" style="margin: 10px 0;">' +
-                '<div class="mdui-card-primary">' +
-                '<div class="mdui-card-content message-content">' + messageContent+ '</div>' +
-                '</div></div>');
+            if (message.msg !== "") {
+                var messageContent = formatMessage(message, username);
+                var messageStyle = message.type === "CHAT" ? '' : 'style="font-style: italic; font-weight: normal"';
+                $messageContainer.append(
+                    '<div class="mdui-card" style="margin: 10px 0;">' +
+                    '<div class="mdui-card-primary">' +
+                    '<div class="mdui-card-content message-content"'+ messageStyle + '>' + messageContent + '</div>' +
+                    '</div></div>');
+            }
 
             $('.chat-num').text(message.onlineCount);
             var $cards = $messageContainer.children('.mdui-card:visible').toArray();
@@ -162,7 +166,7 @@
     function formatMessage(message, username) {
         var messageContent = "";
         if (message.type === "CHAT") {
-            messageContent = message.username + ": " + message.msg;
+            messageContent = "<span style='color: #444444; font-weight: bold'>" + message.username  + "</span>" + ":&nbsp;&nbsp;&nbsp;" + "<span style='color: #222222; font-size: medium'>" + message.msg  + "</span>";
         } else {
             var isSender = username === message.username;
             messageContent = (isSender ? "You have" : message.username + " has") + message.msg;
